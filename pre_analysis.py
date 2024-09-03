@@ -2,6 +2,7 @@ import csv
 import pandas as pd
 import itertools as it
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from scipy import signal
@@ -167,3 +168,34 @@ def get_stim_list(path):
         row = next(reader)
 
     return list(map(int, row))
+
+
+
+def get_avg_angle(parts): 
+    points = parts[0]
+    top = points[0]
+    middle = points[1]
+    bottom = points[2]
+    angles = []
+    for coord1, coord2 in zip(bottom, middle): 
+        x1, y1, z1 = coord1
+        x2, y2, z2 = coord2
+
+        #We only care about the angle BEFORE we climb the wall. 
+        if z1 or z2 > 460: 
+            #Calculate the differences in x-y plane
+            delta_x = x2 - x1
+            delta_y = y2 - y1
+            
+            # Calculate the angle in radians
+            angle_radians = math.atan2(delta_y, delta_x)
+            
+            # Convert angle to degrees
+            angle_degrees = math.degrees(angle_radians)
+            
+            angles.append(angle_degrees)
+    
+    avg = np.median(angles)
+
+    return avg
+

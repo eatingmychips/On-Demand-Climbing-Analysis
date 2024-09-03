@@ -32,34 +32,37 @@ stim_folder = r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240719
 ########### End of file collection ########### 
 
 
-def stat_analysis(files): 
+def read_in(files): 
     pos_dict = {}   
     for file in files:
+        #Get the filename that is to be analysed : E.g: Beetle_x_trial_y_segment_z_
         filename = os.path.splitext(os.path.basename(file))[0]
+
+        #Create the stimulation file name and merge with stimulation path, then grab stimulation file. 
         stim_name = filename + 'stimulation.csv'
         stim_path = f"{stim_folder}\\{stim_name}"
         stim = get_stim_list(stim_path)
+
+        #Read in the raw_data_file
         parts = file_read(file)
         top = moving_avg(parts[0])
         middle = moving_avg(parts[1])
         bottom = moving_avg(parts[2])
-        body_v = body_vel(middle)
         
+        #Create a list of top, middle, bottom points and assign to dictionary with 'key' as filename. 
         points = [top, middle, bottom]
         pos_dict[filename] = [points, stim]
 
-    return body_v, pos_dict
+    return pos_dict
 
 ##TODO: Implement body angle compared to wall, Is the wall on the left or right side. What is the latency of climb, from first stimulation? How many stimulations until successful climb? 
-
-body_v, pos_dict = stat_analysis(files)
-
-
+pos_dict = read_in(files)
 
 
 
 for key, value in pos_dict.items():
     xyzplot(value, key)
+    print(get_avg_angle(value))
 
 
 
