@@ -199,3 +199,25 @@ def get_avg_angle(parts):
 
     return avg
 
+
+
+def get_latency(parts): 
+    #Get top, middle and bottom points
+    points = parts[0]
+    stim = parts[1]
+    top = points[0]
+    middle = points[1]
+    bottom = points[2]
+
+    begin = stim[0]
+
+    for i in range(len(top)): 
+        if top[i][2] < 440: 
+            end = i
+            break
+
+        
+    time = (end - begin)/100
+
+    return time
+

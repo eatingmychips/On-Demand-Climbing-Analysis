@@ -63,7 +63,7 @@ pos_dict = read_in(files)
 for key, value in pos_dict.items():
     xyzplot(value, key)
     print(get_avg_angle(value))
-
+    print(get_latency(value))
 
 
 
