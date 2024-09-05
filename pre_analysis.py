@@ -101,7 +101,6 @@ def moving_avg(part):
 def xyzplot(parts, name):
     points = parts[0]
     stims = parts[1]
-    print(stims)
     top = points[0]
     middle = points[1]
     bottom = points[2]
@@ -180,28 +179,59 @@ def get_avg_angle(parts):
     for coord1, coord2 in zip(bottom, middle): 
         x1, y1, z1 = coord1
         x2, y2, z2 = coord2
-
-        #We only care about the angle BEFORE we climb the wall. 
-        if z1 or z2 > 460: 
-            #Calculate the differences in x-y plane
-            delta_x = x2 - x1
-            delta_y = y2 - y1
-            
-            # Calculate the angle in radians
-            angle_radians = math.atan2(delta_y, delta_x)
-            
-            # Convert angle to degrees
-            angle_degrees = math.degrees(angle_radians)
-            
-            angles.append(angle_degrees)
     
+        #We only care about the angle BEFORE we climb the wall. 
+        if z1 or z2 > 450: 
+            if x1 or x2 < -95:
+                #Calculate the differences in x-y plane
+                delta_x = x2 - x1
+                delta_y = y2 - y1
+                
+                # Calculate the angle in radians
+                angle_radians = math.atan2(delta_y, delta_x)
+                
+                # Convert angle to degrees
+                angle_degrees = math.degrees(angle_radians)
+                
+                angles.append(angle_degrees)
+
+                last_x = x2
+                last_y = y2
+
+    #TODO: Implement counting of corners and non-corners. Probably to do in 'statistical_analysis.py'. 
+    #TODO: Implement Average Stim Latency / trial and / beetle. 
+    #TODO: Implement 'stimulation effort function' Pretty much done with get_num_stims. 
+    #TODO: Clarify orientation and DLC accuracy with videos on computer. 
+    #TODO: Extract good example and see if analysis also looks good. 
+    #TODO: Re-record raw elytra stimulation Parameters. 
+
+
     avg = np.median(angles)
+    if 20 < avg < 140:
+        if last_y < -60:  #Beetle is on the top corner
+            return "Right hand side facing wall, Top corner", avg
+        elif last_y > 30: #Beetle is on the bottom corner
+            return "Right hand side facing wall, Bottom corner", avg
+        else:   #Beetle is in the middle 
+            return "Right hand side facing wall, Middle"
+        
+    elif -200 < avg < -110:
+        if last_y < -60:  #Beetle is on the top corner
+            return "Right hand side facing wall, Top corner", avg
+        elif last_y > 30: #Beetle is on the bottom co
+            return "Left hand side facing wall, Bottom corner", avg
+        
+    elif -100 < avg < 10: 
+        if last_y < -60:  
+            return "Left hand side facing wall, Top corner", avg
+        elif last_y > 30:
+            return "Left hand side facing wall, Bottom corner", avg
+    else: 
+        return "Unsure on wall orientation", avg
 
-    return avg
 
 
-
-def get_latency(parts): 
+def get_stim_latency(parts): 
     #Get top, middle and bottom points
     points = parts[0]
     stim = parts[1]
@@ -212,12 +242,31 @@ def get_latency(parts):
     begin = stim[0]
 
     for i in range(len(top)): 
-        if top[i][2] < 440: 
+        if top[i][2] < 450: 
             end = i
             break
+        else: 
+            end = i
 
-        
     time = (end - begin)/100
 
     return time
+
+
+def get_num_stims(parts): 
+    points = parts[0]
+    stims = parts[1]
+    top = points[0]
+    middle = points[1]
+    bottom = points[2]
+
+    pre_stims = []
+    for i in range(len(top)): 
+        if top[i][2] < 450: 
+            for stim in stims: 
+                if stim < i: 
+                    pre_stims.append(stim)
+            break
+    
+    return len(pre_stims)
 

@@ -61,11 +61,13 @@ pos_dict = read_in(files)
 
 
 for key, value in pos_dict.items():
+    print("\n For: ", key, " We have the following results: ")
+    print("Average angle before wall climb: ", get_avg_angle(value))
+    print("Latency for wall climb from first stimulation: ", get_stim_latency(value))
+    
+    print("Number of stimulations before wall climb: ", get_num_stims(value))
     xyzplot(value, key)
-    print(get_avg_angle(value))
-    print(get_latency(value))
-
-
+    
 
 
 
