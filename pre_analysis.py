@@ -176,6 +176,9 @@ def get_avg_angle(parts):
     middle = points[1]
     bottom = points[2]
     angles = []
+    if len(bottom) == 0 or len(middle) == 0:
+        return "No valid coordinates in bottom or middle", 0
+    
     for coord1, coord2 in zip(bottom, middle): 
         x1, y1, z1 = coord1
         x2, y2, z2 = coord2
@@ -204,30 +207,40 @@ def get_avg_angle(parts):
     #TODO: Clarify orientation and DLC accuracy with videos on computer. 
     #TODO: Extract good example and see if analysis also looks good. 
     #TODO: Re-record raw elytra stimulation Parameters. 
-
+    if not angles: 
+        return "No Valid angles detected, ", 0
 
     avg = np.median(angles)
+    
+    
     if 20 < avg < 140:
         if last_y < -60:  #Beetle is on the top corner
-            return "Right hand side facing wall, Top corner", avg
+            return "Right hand side facing wall, Top corner", 1
         elif last_y > 30: #Beetle is on the bottom corner
-            return "Right hand side facing wall, Bottom corner", avg
+            return "Right hand side facing wall, Bottom corner", 1
         else:   #Beetle is in the middle 
-            return "Right hand side facing wall, Middle"
+            return "Right hand side facing wall, Middle", 0
         
     elif -200 < avg < -110:
-        if last_y < -60:  #Beetle is on the top corner
-            return "Right hand side facing wall, Top corner", avg
-        elif last_y > 30: #Beetle is on the bottom co
-            return "Left hand side facing wall, Bottom corner", avg
-        
+        if last_y < -60 and last_x < -95:  #Beetle is on the top corner
+            return "Right hand side facing wall, Top corner", 1
+        elif last_y > 30 and last_x < -105: #Beetle is on the bottom corner
+            return "Left hand side facing wall, Bottom corner", 1
+        elif last_y < -60 and last_x > -95: 
+            return "Right hand side facing wall, Middle", 0
+        elif last_y > 30 and last_x > -105: 
+            return "Left hand side facing wall, Middle", 0
+        else: 
+            return 0,0
     elif -100 < avg < 10: 
         if last_y < -60:  
-            return "Left hand side facing wall, Top corner", avg
+            return "Left hand side facing wall, Top corner", 1
         elif last_y > 30:
-            return "Left hand side facing wall, Bottom corner", avg
+            return "Left hand side facing wall, Bottom corner", 0
+        else:
+            return "Left hand side facing wall, Middle", 1
     else: 
-        return "Unsure on wall orientation", avg
+        return "Unsure on wall orientation", 0
 
 
 

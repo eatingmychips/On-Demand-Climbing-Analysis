@@ -11,6 +11,10 @@ import statistics as stat
 import matplotlib.patches as mpatches
 from os import listdir
 import os
+import re
+
+
+
 
 ######## Here we import the files necessary for analysis, we also import the representative files for gait plotting ########
 
@@ -20,14 +24,14 @@ def find_csv_filenames( path_to_dir, suffix=".csv" ):
 
 
 
-files = [r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240719\\" + x 
-         for x in find_csv_filenames(r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240719")]
+files = [r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240724\\" + x 
+         for x in find_csv_filenames(r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240724")]
 
-stim_files = [r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240719\Stimulations\\" + x 
-         for x in find_csv_filenames(r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240719\Stimulations")]
+stim_files = [r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240724\Stimulations\\" + x 
+         for x in find_csv_filenames(r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240724\Stimulations")]
 
 
-stim_folder = r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240719\Stimulations"
+stim_folder = r"C:\Users\lachl\OneDrive\Thesis\OnDemandClimbing\RawData\20240724\Stimulations"
 
 ########### End of file collection ########### 
 
@@ -59,118 +63,95 @@ def read_in(files):
 pos_dict = read_in(files)
 
 
+corner_test = []
+latencies = []
+stim_effort = []
+# Group the files by beetle name
 
+# Group the files by beetle name
+beetle_groups = {}
+
+# Dictionary to store results for each beetle
+beetle_results = {}
+beetle_latencies = {}
+beetle_effort = {}
+
+
+# Populate the beetle_groups dictionary based on file names
 for key, value in pos_dict.items():
-    print("\n For: ", key, " We have the following results: ")
-    print("Average angle before wall climb: ", get_avg_angle(value))
-    print("Latency for wall climb from first stimulation: ", get_stim_latency(value))
+    # Extract the beetle name using regex (assuming filenames follow 'Beetle_x_trial_...')
+    beetle_name = re.match(r"(beetle_\d+)", key).group(1)  # Match the beetle name pattern
     
-    print("Number of stimulations before wall climb: ", get_num_stims(value))
-    xyzplot(value, key)
+    if beetle_name not in beetle_groups:
+        beetle_groups[beetle_name] = []
     
+    # Append the current file (and its associated values) to the list for that beetle
+    beetle_groups[beetle_name].append((key, value))
+
+# Now, loop through each beetle group and process files for each beetle collectively
+for beetle_name, beetle_data in beetle_groups.items():
+    corner_test = []
+    latencies = []
+    stim_effort = []
+
+    print(f"\nProcessing data for {beetle_name}:")
+    
+    for key, value in beetle_data:
+        # print("\n For: ", key, " We have the following results: ")
+        # print("Average angle before wall climb: ", get_avg_angle(value))
+        # print("Latency for wall climb from first stimulation: ", get_stim_latency(value))
+        # print("Number of stimulations before wall climb: ", get_num_stims(value))
+
+        # Append whether climb was corner or middle climb
+        _, corner_middle = get_avg_angle(value)
+        corner_test.append(corner_middle)
+
+        # Append Latency Value
+        latencies.append(get_stim_latency(value))
+
+        # Append Stim Effort
+        stim_effort.append(get_num_stims(value))
+
+    # Calculate statistics for the beetle
+    ratio_corner = sum(corner_test) / len(corner_test) * 100 if len(corner_test) > 0 else 0
+    avg_latency = np.median(latencies) if len(latencies) > 0 else None
+    avg_stim_effort = np.median(stim_effort) if len(stim_effort) > 0 else None
+
+    # Print the calculated values for each beetle
+    print(f"\n{beetle_name} climbs corner walls {ratio_corner:.2f}% of the time")
+    print("Average latency from first stimulation: ", avg_latency)
+    print("Average stimulation effort was: ", avg_stim_effort)
+
+    # Store the results in beetle_results dictionary
+    beetle_results[beetle_name] = {
+        "ratio_corner": ratio_corner,
+        "avg_latency": avg_latency,
+        "avg_stim_effort": avg_stim_effort
+    }
+
+    beetle_latencies[beetle_name] = latencies
+    beetle_effort[beetle_name] = stim_effort
 
 
 
+fig, axs = plt.subplots(1, 2, figsize=(10, 6))
 
 
-#### Animation of Velocity ####
+axs[0].boxplot(beetle_latencies.values(), labels=beetle_latencies.keys())
+axs[0].set_title('Boxplot of Stimulation Latencies for Each Beetle')
+axs[0].set_xlabel('Beetle Name')
+axs[0].set_ylabel('Stimulation Latencies (seconds)')
 
-"""
-def animation_vel(): 
-    fig, ax = plt.subplots()
-    line, = ax.plot(time, body_v)
-
-    # Set up plot limits
-    ax.set_xlim(0, len(time))
-    ax.set_ylim(0, 1.5)
-    ax.set_title("Body Velocity vs Time (Frames) (Right Elytra Stimulation)")
-    ax.set_xlabel("Frames (fps = 100)")
-    ax.set_ylabel("Velocity (Body Lengths / second)")
-
-    vertical_line1 = ax.axvline(x=time[50], color='red', linestyle=':', visible=False)
-    vertical_line2 = ax.axvline(x=time[130], color='red', linestyle=':', visible=False)
-    vertical_line3 = ax.axvline(x=time[200], color='red', linestyle=':', visible=False)
-    vertical_line4 = ax.axvline(x=time[250], color='red', linestyle=':', visible=False)
-    vertical_line5 = ax.axvline(x=time[330], color='red', linestyle=':', visible=False)
-
-    # Initialization function: plot the background of each frame
-    def init():
-        line.set_ydata([np.nan] * len(time))
-        vertical_line1.set_visible(False)
-        vertical_line2.set_visible(False)
-        vertical_line3.set_visible(False)
-        vertical_line4.set_visible(False)
-        vertical_line5.set_visible(False)
-
-        return line, vertical_line1, vertical_line2, vertical_line3, vertical_line4, vertical_line5
-
-    # Animation function: update the line at each frame
-    def update(frame):
-        line.set_data(time[:frame], body_v[:frame])
-        if frame >= 50:
-            vertical_line1.set_visible(True)
-        if frame >= 130:
-            vertical_line2.set_visible(True)
-        if frame >= 200:
-            vertical_line3.set_visible(True)
-        if frame >= 250:
-            vertical_line4.set_visible(True)
-        if frame >= 330:
-            vertical_line5.set_visible(True)
-        
-        return line, vertical_line1, vertical_line2, vertical_line3, vertical_line4, vertical_line5
-
-    # Create the animation
-    ani = animation.FuncAnimation(fig, update, frames=len(time), init_func=init, blit=True, interval=3)
-
-    Writer = animation.FFMpegWriter(fps = 100, metadata=dict(artist = 'me'), bitrate = 1000)
-    ani.save("vert_wall_beetle_6_trial_2_cam-1.mp4", writer = Writer)
-    plt.show()
+axs[1].boxplot(beetle_effort.values(), labels = beetle_effort.keys())
+axs[1].set_title('Boxplot of Stimulation Effort for Each Beetle')
+axs[1].set_xlabel('Beetle Name')
+axs[1].set_ylabel('Stimulation Effort (No. Stimulations)')
 
 
-#### Scatter animation ####
-def animation_scatter():
-    top = points[0]
-    middle = points[1]
-    bottom = points[2]
 
-    # Extract x and y values for each dataset
-    x_top, y_top = zip(*top)
-    x_middle, y_middle = zip(*middle)
-    x_bottom, y_bottom = zip(*bottom)
+plt.show()
 
-    # Create a figure and axis
-    fig, ax = plt.subplots()
-    line_top, = ax.plot([], [], color='purple', marker='o', linestyle='-', label='Top')
-    line_middle, = ax.plot([], [], 'go-', label='Middle')
-    line_bottom, = ax.plot([], [], 'ro-', label='Bottom')
 
-    # Set axis limits
-    ax.set_xlim(min(x_top + x_middle + x_bottom) - 1, max(x_top + x_middle + x_bottom) + 1)
-    ax.set_ylim(min(y_top + y_middle + y_bottom) - 1, max(y_top + y_middle + y_bottom) + 1)
-
-    # Add legend
-    ax.legend()
-
-    def init():
-        line_top.set_data([], [])
-        line_middle.set_data([], [])
-        line_bottom.set_data([], [])
-        return line_top, line_middle, line_bottom
-
-    def animate(i):
-        # Update the data for each line
-        line_top.set_data(x_top[i:i+1], y_top[i:i+1])
-        line_middle.set_data(x_middle[i:i+1], y_middle[i:i+1])
-        line_bottom.set_data(x_bottom[i:i+1], y_bottom[i:i+1])
-        return line_top, line_middle, line_bottom
-
-    # Create an animation
-    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=len(top), interval=1, blit=True)
-
-    # Display the animation
-    plt.show()
-"""
 
 
 
