@@ -70,6 +70,8 @@ stim_effort = []
 
 # Group the files by beetle name
 beetle_groups = {}
+beetle_groups["Left"] = []
+beetle_groups["Right"] = []
 
 
 # Dictionary to store results for each beetle
@@ -81,23 +83,17 @@ beetle_side_latencies = {}
 # Populate the beetle_groups dictionary based on file names
 for key, value in pos_dict.items():
     # Extract the beetle name using regex (assuming filenames follow 'Beetle_x_trial_...')
-    beetle_name = re.match(r"(beetle_\d+)", key).group(1)  # Match the beetle name pattern
-    
+    beetle_name = re.match(r"(beetle_\d_trial_\d+)", key).group(1)  # Match the beetle name pattern
 
-    if beetle_name not in beetle_groups:
-        beetle_groups[beetle_name] = []
-    
+
+    if beetle_name in ["beetle_1_trial_3", "beetle_2_trial_2", "beetle_4_trial_3", "beetle_6_trial_2", "beetle_8_trial_2"]: 
     # Append the current file (and its associated values) to the list for that beetle
-    beetle_groups[beetle_name].append((key, value))
+        beetle_groups["Left"].append((key, value))
+    elif beetle_name in  ["beetle_1_trial_4", "beetle_4_trial_4", "beetle_6_trial_1", "beetle_7_trial_3", "beetle_8_trial_1"] : 
+        
+        beetle_groups["Right"].append((key, value))
 
-
-#Lists for comparing middle and corner latencies and stimulation efforts
-latencies_middle = []
-latencies_corner = []
-stimulation_effort_middle = []
-stimulation_effort_corner = []
-
-
+# Now, loop through each beetle group and process files for each beetle collectively
 # Now, loop through each beetle group and process files for each beetle collectively
 for beetle_name, beetle_data in beetle_groups.items():
     corner_test = []
@@ -115,13 +111,6 @@ for beetle_name, beetle_data in beetle_groups.items():
         # Append whether climb was corner or middle climb
         _, corner_middle = get_avg_angle(value)
         corner_test.append(corner_middle)
-
-        if corner_middle == 0: 
-            latencies_middle.append(get_stim_latency(value))
-            stimulation_effort_middle.append(get_num_stims(value))
-        elif corner_middle == 1: 
-            latencies_corner.append(get_stim_latency(value))
-            stimulation_effort_corner.append(get_num_stims(value))
         
         # Append Latency Value
         latencies.append(get_stim_latency(value))
@@ -148,44 +137,28 @@ for beetle_name, beetle_data in beetle_groups.items():
 
     beetle_latencies[beetle_name] = latencies
     beetle_effort[beetle_name] = stim_effort
+
     
     
-
-
-print(latencies_corner)
 fig, axs = plt.subplots(1, 2, figsize=(10, 6))
 
 
 axs[0].boxplot(beetle_latencies.values(), labels=beetle_latencies.keys())
-axs[0].set_title('Boxplot of Stimulation Latencies for Each Beetle')
-axs[0].set_xlabel('Beetle Name')
-axs[0].set_ylabel('Stimulation Latencies (seconds)')
+axs[0].set_title('Clinbing Latencies Vs Stimulation Side')
+axs[0].set_xlabel('Stimulation Side')
+axs[0].set_ylabel('Climb Latency (seconds)')
 
 axs[1].boxplot(beetle_effort.values(), labels = beetle_effort.keys())
-axs[1].set_title('Boxplot of Stimulation Effort for Each Beetle')
-axs[1].set_xlabel('Beetle Name')
+axs[1].set_title('Stimulation Effort Vs Stimulation Side')
+axs[1].set_xlabel('Stimulation Side')
 axs[1].set_ylabel('Stimulation Effort (No. Stimulations)')
 
 
 
 plt.show()
 
-laten_corner_middle = [latencies_corner, latencies_middle]
-label = ["Corner", "Middle"]
-fig, axs = plt.subplots(1, 2, figsize=(10, 6))
-axs[0].boxplot(laten_corner_middle)
-axs[0].set_xticklabels(label, fontsize = 13)
-axs[0].set_ylabel("Wall Climbing Latency (s)")
-axs[0].set_title("Wall Climbing Latency vs Corner or Middle Climb")
 
-stim_corner_middle = [stimulation_effort_corner, stimulation_effort_middle]
-label = ["Corner", "Middle"]
-axs[1].boxplot(stim_corner_middle)
-axs[1].set_xticklabels(label, fontsize = 13)
-axs[1].set_ylabel("Stimulation Effort")
-axs[1].set_title("Stimulation Effort vs Corner or Middle Climb")
 
-plt.show()
 
 
 
