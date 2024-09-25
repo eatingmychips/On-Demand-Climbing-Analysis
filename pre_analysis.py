@@ -80,13 +80,13 @@ def moving_avg(part):
         party = pd.Series(party)
         partz = pd.Series(partz)
 
-        partx = round(partx.ewm(alpha=0.2, adjust= False).mean(), 100)
+        partx = round(partx.ewm(alpha=0.5, adjust= False).mean(), 5)
         partx = partx.tolist()
 
-        party = round(party.ewm(alpha=0.2, adjust= False).mean(), 100)
+        party = round(party.ewm(alpha=0.5, adjust= False).mean(), 5)
         party = party.tolist()
 
-        partz = round(partz.ewm(alpha=0.2, adjust= False).mean(), 100)
+        partz = round(partz.ewm(alpha=0.5, adjust= False).mean(), 5)
         partz = partz.tolist()
 
 
